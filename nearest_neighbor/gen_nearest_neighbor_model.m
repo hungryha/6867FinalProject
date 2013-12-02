@@ -6,7 +6,7 @@ x = [];
 y = [];
 %numcep = 20;
 for i=1:10;
-  for j=1:20;
+  for j=1:200;
     
 %{
     [d,sr] = wavread(char(strcat(path,lang(i),'_training_files/',lang(i),'-',num2str(j), '.wav')));
