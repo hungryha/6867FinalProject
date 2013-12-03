@@ -1,6 +1,6 @@
-function [param] = em(x,m,l)
+function [param] = em(x, m, init_means)
 
-param = initialize(x,m,l);
+param = initialize(x, m, init_means);
 [param,L] = one_em_iter(x,param);
 
 L0 = L-abs(L);
@@ -13,30 +13,49 @@ end;
 param.loglik = L;
 
 % --------------------------------------------
-function [param] = initialize(x,m,l)
+function [param] = initialize(x,m,init_means)
+
+param.k = m;
 
 [n, len] = size(x);
 
-[xr,I] = sort(rand(n,1));
-param.mu = zeros(m, len);
-
 % randomly select m points as initial means.
-for j=1:m
-    param.mu(j,:) = x(I(j),:); 
+for k=1:m
+    param.mu(k,:) = init_means(k, :); 
 end
-param.p = ones(m,1)/m;
 
 % initialize variances based on the variance of the whole data set v.
 % note that in principle all v_k (k=1..l) can't be greater than v.
-v = var(x);
-param.v = zeros(l,len);
-for k=1:l
-    for i = 1:len
-        param.v(k,i) = v(1,i)/2^k;
+
+param.v = zeros(len,len,m);
+count = zeros(m, 1);
+
+for i=1:n
+    min_k = 1;
+    min_dist = (x(i,:) - param.mu(1,:)).^2;
+    for k=1:m
+        dist = (x(i,:) - param.mu(k,:)).^2;
+        if (dist < min_dist)
+            min_dist = dist;
+            min_k = k;
+        end
     end
+    param.v(:,:,min_k) = param.v(:,:,min_k) + (x(i,:) - param.mu(min_k,:))'*(x(i,:) - param.mu(min_k,:));
+    count(min_k, 1) = count(min_k, 1) + 1;
 end
 
-param.q = ones(l,1)/l;
+for k=1:m
+    param.v(:,:,k) = param.v(:,:,k) / count(min_k, 1);
+end
+
+
+% for k=1:m
+%     for i=1:n
+%         param.v(:,:,k) = param.v(:,:,k) + (x(i,:) - param.mu(k,:))'*(x(i,:) - param.mu(k,:));
+%     end
+% end
+
+param.p = ones(m,1)/m;
 
 % --------------------------------------------
 function [param,loglik] = one_em_iter(x,param);
@@ -44,25 +63,17 @@ function [param,loglik] = one_em_iter(x,param);
 [n, len] = size(x);
 
 m = length(param.p);
-l = length(param.q);
-
-%convert the data points into a row vector.
-%x = reshape(x,length(x),len);
 
 %logp is a n x (m*l) matrix
 %n is the number of data points
 
-logp = zeros(size(x,1),m*l);
+logp = zeros(n,m);
 
 %ind is the index for mixture component
-ind = 1;
-for j=1:m,
-  for k=1:l,
+for k=1:m,
     %evalgauss returns a column vector that contains the log probability of each data
     %point with respect to certain mixture component.
-    logp(:,ind)=evalgauss(x,param.mu(j,:),param.v(k,:))+log(param.p(j)*param.q(k));
-    ind = ind+1;
-  end;
+    logp(:,k)=evalgauss(x,param.mu(k,:),param.v(:,:,k))+log(param.p(k));
 end;
 
 logpmax = max(logp,[],2);
@@ -72,7 +83,7 @@ logpmax = max(logp,[],2);
 % Compute the log sum in this way to reduce numerical errors.
 % Think of the case when we have two log-probabilities: -1001 and -1002
 % It would be better to do [-1001 + log(1+e^-1)] rather than [log(e^-1001+e^-1002)]
-loglik = sum(logpmax + log(sum(exp(logp-logpmax*ones(1,m*l)),2)));
+loglik = sum(logpmax + log(sum(exp(logp-logpmax*ones(1,m)),2)));
 
 %The softmax function compute the posterior probability of each mixture component.
 %pos(n,ind) denotes the posterior porbability of ind^th mixture component the on the n^th data point.
@@ -82,82 +93,44 @@ pos = softmax(logp); % posterior assignments
 % param.p is a column vector that stores all p_j (j=1...m)
 % param.q is a column vector that stores all q_k (k=1...l)
 
-%%%%%%%%%%%%%%%Solving p and q Here%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%Solving p Here%%%%%%%%%%%%%%%%%%%%
 
-n = size(x);
 
-for y = 1:m
-  param.p(y) = 0;
-  for i = 1:n
-    for z = 1:l
-      param.p(y) = param.p(y) + pos(i, (y-1)*l+z);
+n_j = zeros(m, 1);
+
+for k = 1:m
+    for i = 1:n
+        n_j(k, 1) = n_j(k, 1) + pos(i, k);
     end
-  end
-  param.p(y) = param.p(y) / n(1);
 end
 
-
-for z = 1:l
-  param.q(z) = 0;
-  for i = 1:n
-    for y = 1:m
-      param.q(z) = param.q(z) + pos(i, (y-1)*l+z);
-    end
-  end
-  param.q(z) = param.q(z) / n(1);
-end
+param.p = n_j / n;
 
 %%%%%%%%%%%%Finish Solving for p and q%%%%%%%%%%%%%%%%%%
 
 % solve for the means (fixed variances)
 % param.mu is a column vector that stores all mu_j (j=1...m)
 
+
 %%%%%%%%%%%%%Solving for mu Here%%%%%%%%%%%%%%%%%%
 
-for y = 1:m
-  top = 0;
-  bottom = 0;
+for k = 1:m
+  param.mu(k,1) = 0;
   for i = 1:n
-    for z = 1:l
-      top = top + pos(i, (y-1)*l + z) * x(i) / param.v(z)^2;
-      bottom = bottom + pos(i, (y-1)*l + z) / param.v(z)^2;
-    end
+      param.mu(k,:) = param.mu(k,:) + pos(i,k) * x(i,:);
   end
-  param.mu(y) = top/bottom;
+  param.mu(k,:) = param.mu(k,:) / n_j(k,1);
 end
-
 
 %%%%%%%%%%%Finish Solving for mu%%%%%%%%%%%%%%%%%%
 
 % solve for the variances (fixed means)
 % S stores the statistics of each variance parameters
-S = zeros(l,len);
-ind = 1;
-for j=1:m,
-  for k=1:l,
-      for idx = 1:n
-          for i = 1:len
-              S(k,i) = S(k,i) + pos(idx,ind)'*(x(idx,i)-param.mu(j))^2;
-          end
-      end
-    ind = ind + 1;
-  end;
-end;
 
-ntot = sum(reshape(sum(pos,1),l,m),2);
-
-%Estimate the variance
-for i = 1:len
-    param.v(i,:) = S(i,:)/ntot(i,1);
-end
-
-% --------------------------------------------
-function [loglik] = evalgauss(x,mu,v)
-[n, len] = size(x);
-loglik = ones(n, 1);
-for i = 1:n
-    for j = 1:len
-        lik = -0.5*(x(i,j)-mu(j))^2/v(j) - 0.5*log(2*pi*v(j)^2);
-        loglik(i,1) = loglik(i,1) * lik;
-    end
+for k = 1:m
+  param.v(:,:,k) = zeros(len, len);
+  for i = 1:n
+      param.v(:,:,k) = param.v(:,:,k) + pos(i,k) * (x(i,:) - param.mu(k,:))' * (x(i,:) - param.mu(k,:));
+  end
+  param.v(:,:,k) = param.v(:,:,k) / n_j(k,1);
 end

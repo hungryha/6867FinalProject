@@ -1,9 +1,11 @@
 % outputs a vector of the k means
 % input:
 % k -- the number of clusters we want to have
-% data -- an array of d dimensional vectors, each vector
+% inp_data -- an array of d dimensional vectors, each row
 %         representing a data point
-function [result] = kmeans(k, data)
+function [result] = kmeans(k, inp_data)
+
+data = inp_data';
 
 [m, n] = size(data);
 k_means = zeros(m, k);
@@ -17,9 +19,11 @@ while num_means < k
   P = ones(n, 1);
   for i = 1:n
       for j = 1:k
-          dist = sqrt(sum((data(:, i) - k_means(:, j)).^2));
-          if (sum(k_means(:, j)) > 0) & (P(i, 1) > dist)
-              P(i, 1) = dist;
+          if (sum(k_means(:,j)) > 0)
+              dist = sqrt(sum((data(:, i) - k_means(:, j)).^2));
+              if (P(i, 1) > dist)
+                  P(i, 1) = dist;
+              end
           end
       end
   end
@@ -28,6 +32,7 @@ while num_means < k
   index = sum(rand() > cumsum(P)) + 1;
   num_means = num_means + 1;
   k_means(:, num_means) = data(:, index);
+  
 end
 
 % iterative k-means clustering
@@ -63,4 +68,4 @@ while prev_kmin ~= k_means
   end
 end
 
-result = k_means;
+result = k_means';
