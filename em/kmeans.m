@@ -35,37 +35,39 @@ while num_means < k
   
 end
 
+display('K means found')
+
 % iterative k-means clustering
 
-prev_kmin = zeros(m, k);
-while prev_kmin ~= k_means
-  prev_kmin = k_means;
-
-  % this is actually the sum of the vectors for each cluster
-  new_cluster = zeros(m, k);
-  count = zeros(k, 1);
-
-  % re-cluster
-  for i = 1:n
-    data_point = data(:,i);
-    min_distance = sum((data_point - k_means(:, 1)).^2);
-    min_cluster = 1;
-    for j = 1:k
-      distance = sum((data_point - k_means(:, j)).^2);
-      if distance < min_distance
-        min_distance = distance;
-        min_cluster = j;
-      end
-    end
-    
-    new_cluster(:, min_cluster) = new_cluster(:, min_cluster) + data_point;
-    count(min_cluster, 1) = count(min_cluster, 1) + 1;
-  end
-
-  % recalculate the k means
-  for i = 1:k
-      k_means(:, i) = new_cluster(:, i) / count(i, 1);
-  end
-end
+% prev_kmin = zeros(m, k);
+% while ~isequal(prev_kmin, k_means)
+%   prev_kmin = k_means;
+% 
+%   % this is actually the sum of the vectors for each cluster
+%   new_cluster = zeros(m, k);
+%   count = zeros(k, 1);
+% 
+%   % re-cluster
+%   for i = 1:n
+%     data_point = data(:,i);
+%     min_distance = sum((data_point - k_means(:, 1)).^2);
+%     min_cluster = 1;
+%     for j = 1:k
+%       distance = sum((data_point - k_means(:, j)).^2);
+%       if distance < min_distance
+%         min_distance = distance;
+%         min_cluster = j;
+%       end
+%     end
+%     
+%     new_cluster(:, min_cluster) = new_cluster(:, min_cluster) + data_point;
+%     count(min_cluster, 1) = count(min_cluster, 1) + 1;
+%   end
+% 
+%   % recalculate the k means
+%   for i = 1:k
+%       k_means(:, i) = new_cluster(:, i) / count(i, 1);
+%   end
+% end
 
 result = k_means';
