@@ -1,6 +1,6 @@
 function [] = test_em_model(params)
 
-lang = {'dutch', 'english', 'de', 'french', 'russian', 'italian', 'es'};
+lang = {'portuguese', 'el', 'english', 'dutch', 'french', 'russian', 'italian', 'es', 'de'};
 
 test_data_mapping = containers.Map();
 test_data_mapping('de') = 2001:3000;
@@ -36,19 +36,13 @@ for l=1:size(lang, 2)
         max_likelihood = 0;
         max_lang = '';
         
+        data = extract_single_wav('6867data/test_data/', '_test_files/', cur_lang, random_order(1,s), 'mel');
+        
         for i=1:size(lang,2)
             iter_lang = char(lang(1, i));
-            
-            % get the feature vectors of a sample recording
-            if strcmp(iter_lang, 'de')
-                data = extract_single_wav('6867data/test_data/', '_test_files/', cur_lang, random_order(1,s), 'mel');
-            else
-                data = extract_single_wav('6867data/test_data/', '_test_files/', cur_lang, random_order(1,s), 'mel');
-            end
-            
+            param = params(iter_lang);
             likelihood = 0;
             for x=1:size(data,1)
-                param = params(iter_lang);
                 k_likelihood = 0;
                 for k=1:param.k
                     if (param.p(k) * evalgauss(data(x,:), param.mu(k,:), param.v(:,:,k)) ~= -Inf)

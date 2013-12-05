@@ -4,8 +4,8 @@ function [features] = extract_feature_from_wav(filepath, fbtype)
 
 numcep = 12;
 %fbtype = 'bark';
-wintime = 0.25;
-hoptime = 0.20;
+wintime = 0.025;
+hoptime = 0.020;
 nbands = 26;
 [d,sr] = wavread(filepath);
 [mm,aspc] = melfcc(d, sr, 'maxfreq', 8000, 'numcep', numcep, 'nbands', nbands, 'fbtype', fbtype, 'dcttype', 1, 'usecmp', 1, 'wintime', wintime, 'hoptime', hoptime, 'preemph', 0, 'dither', 1);

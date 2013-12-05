@@ -5,7 +5,8 @@ param = initialize(x, m, init_means);
 
 count = 0;
 L0 = L-abs(L);
-while (L-L0>abs(L)*1.5*1e-5 & count < 10),
+while (L-L0>abs(L)*1e-6 & count < 10),
+    disp(['L: ', num2str(L), ', diff: ', num2str(abs(L)*1e-6), ', actual diff: ', num2str(L-L0)])
   %Stop iteration when the increase of loglikelihood is small enough
   L0 = L;
   [param,L] = one_em_iter(x,param);

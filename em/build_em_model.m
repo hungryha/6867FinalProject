@@ -1,9 +1,10 @@
-function [data, parameters] = build_em_model()
+function [parameters] = build_em_model(lang)
 
 %lang = {'de';'dutch';'el';'english';'es';'french';'he';'italian';'portuguese';'russian'};
-lang = {'russian', 'es', 'english', 'french', 'italian', 'dutch', 'de', 'portuguese'};
+%lang = {'de', 'russian', 'es', 'english', 'french', 'italian', 'dutch'};
+%lang = {'portuguese'};
 
-fbtype = 'bark';
+fbtype = 'mel';
 
 num_clusters = containers.Map();
 num_clusters('russian') = 25;
@@ -16,15 +17,15 @@ num_clusters('de') = 40;
 num_clusters('portuguese') = 25;
 
 train_data_mapping = containers.Map();
-train_data_mapping('de') = [1:2000];
+train_data_mapping('de') = [1:2000]; % use 50 clusters
 train_data_mapping('es') = [1:2000];
 train_data_mapping('french') = [1:2000];
 train_data_mapping('dutch') = [1:2000];
 train_data_mapping('el') = [1:658];
 train_data_mapping('he') = [1:200];
-train_data_mapping('portuguese') = [1:2991];
+train_data_mapping('portuguese') = [500:2991];
 train_data_mapping('russian') = [1:700];
-train_data_mapping('english') = [1:2000];
+train_data_mapping('english') = [500:2000];
 train_data_mapping('italian') = [1:2000];
 
 data = containers.Map();
@@ -39,7 +40,8 @@ for l=1:size(lang, 2)
     disp(cur_lang)
     
     training_data_range = train_data_mapping(cur_lang);
-    random_order = training_data_range(:, randperm(size(training_data_range, 2)));
+    %random_order = training_data_range(:, randperm(size(training_data_range, 2)));
+    random_order = training_data_range;
     
     x = [];
     
@@ -51,7 +53,7 @@ for l=1:size(lang, 2)
     
     display('Feature extraction done')
     
-    k = num_clusters(cur_lang);
+    k = 30;
     display(['Running EM with K = ', num2str(k)])
     means = kmeans(k, x);
     max_param = em(x, k, means)
