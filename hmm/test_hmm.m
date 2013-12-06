@@ -5,13 +5,15 @@
 % test_error(model, numneighbor)
 function [test_error] = test_hmm(model)
 path = 'C:/Users/Laphonchai/Desktop/6.867/6867data/test_data/';
-lang = {'de';'dutch';'el';'english';'es';'french';'he';'italian';'portuguese';'russian'};
-initial_filename = [2001, 2001, 659, 2001, 2001, 2001, 201, 2001, 1992, 701];
+lang = {'de';'dutch';'el';'english';'es';'french';'italian';'portuguese';'russian'};
+initial_filename = [2001, 2001, 659, 2001, 2001, 2001, 2001, 1992, 701];
 num_wrong = 0;
 langSize = length(lang);
-recordPerLang = 3;
+recordPerLang = 100;
 total = langSize*recordPerLang;
+percent = zeros(langSize,1);
 for i=1:langSize;
+  bucket = zeros(10,1);
   for j=0:(recordPerLang-1);
     file_num = j + initial_filename(i);
     if i==1;
@@ -27,28 +29,31 @@ for i=1:langSize;
     elseif i==6;
         language = 'french';
     elseif i==7;
-        language = 'he';
-    elseif i==8;
         language = 'italian';
-    elseif i==9;
+    elseif i==8;
         language = 'portuguese';
-    elseif i==10;
+    elseif i==9;
         language = 'russian';
     end
     file_path = char(strcat(path,language,'_test_files/',language,'-',num2str(file_num), '.wav'));
     
     features = transpose(extract_feature_from_wav(file_path));
-    phonemeFeature = zeros(size(features,1),1);
-    for k=1:size(features,1);
-        phonemeFeature(k) = getNearest(model.means, features(i));
-    end
-    lang = predict(model,phonemeFeature);
-    if lang ~= i;
+    %reduce
+    starting = floor(size(features,1)*3/8)+1;
+    ending = floor(size(features,1)*5/8);
+    predict = predict_hmm(model,features(starting:ending,:));
+    
+    bucket(predict) = bucket(predict) + 1;
+    if predict ~= i;
       num_wrong = num_wrong + 1;
+      percent(i) = percent(i) + 1;
     end     
-    i
   end
+  percent(i) = percent(i)/recordPerLang; 
+  lang(i)
+  bucket
 end
-
+percent
 test_error = num_wrong / total;
+lang
 end
