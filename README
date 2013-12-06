@@ -1,4 +1,4 @@
-Using machine learning techniques to classify spoken language. We will use nearest neighbors, gaussian mixture models, and HMM to perform the classification.
+Using machine learning techniques to classify spoken language. We use nearest neighbors, SVMs, gaussian mixture models, and HMM to perform the classification.
 
 In matlab on startup, type:
 run startup
