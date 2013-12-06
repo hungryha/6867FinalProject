@@ -10,14 +10,14 @@ for l=1:size(lang, 2)
     
     display('Starting feature extraction for language ')
     disp(cur_lang)
-    x = extract_features_per_lang('6867data/training_data/', '_training_files/', cur_lang, 1, 50);
+    x = extract_features_per_lang('6867data/training_data/', '_training_files/', cur_lang, 1, 500);
     data(cur_lang) = x;
     
     display('Feature extraction done')
     
     display('K = 40')
-    means = kmeans(40, x);
-    max_param = em(x, 40, means);
+    means = kmeans(30, x);
+    max_param = em(x, 30, means);
     
 %     for k=40:40
 %         display('K = ')

@@ -2,20 +2,18 @@
 function [model] = gen_nearest_neighbor_model()
 path = '~/courses/fall13/6.867/project/training_data/';
 lang = {'de';'dutch';'el';'english';'es';'french';'he';'italian';'portuguese';'russian'};
+
+training_sizes = [2000; 2000; 658; 2000; 2000; 2000; 200; 2000; 1991; 700]; 
+samples_per_lang = min(training_sizes);
 x = [];
 y = [];
-%numcep = 20;
 for i=1:10;
-  for j=1:200;
+  display(strcat('extracting language', num2str(i)));
+  for j=1:samples_per_lang;
     
-%{
-    [d,sr] = wavread(char(strcat(path,lang(i),'_training_files/',lang(i),'-',num2str(j), '.wav')));
-    [mm,aspc] = melfcc(d, sr, 'maxfreq', 8000, 'numcep', numcep, 'nbands', 22, 'fbtype', 'fcmel', 'dcttype', 1, 'usecmp', 1, 'wintime', 0.032, 'hoptime', 0.016, 'preemph', 0, 'dither', 1);
-    first_deltas = deltas(mm);
-    second_deltas = deltas(first_deltas);
-    features = [mm;first_deltas;second_deltas];
-%}
-    features = extract_feature_from_wav(char(strcat(path,lang(i),'_training_files/',lang(i),'-',num2str(j), '.wav')));
+    filepath = char(strcat(path,lang(i),'_training_files/',lang(i),'-',num2str(j), '.wav'));
+
+    features = extract_feature_from_wav(filepath);
      
     x = [x;transpose(features)];
     y = [y;ones(size(features,2),1).*i];

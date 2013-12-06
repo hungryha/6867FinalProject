@@ -1,12 +1,12 @@
 % tests nearest neighbor classifier
 % model = gen_nearest_neighbor_model()
 % test_error(model, numneighbor)
-function [test_error, errors, classifications] = test_error(model, numneighbor)
+function [test_error, errors, classifications] = test_nearest_neighbor_pca(model, numneighbor, pca_limit)
 path = '~/courses/fall13/6.867/project/test_data/';
 lang = {'de';'dutch';'el';'english';'es';'french';'he';'italian';'portuguese';'russian'};
-
 initial_filename = [2000, 2000, 658, 2000, 2000, 2000, 200, 2000, 1991, 700];
 max_test_sizes = [1000, 1000, 219, 1000, 1000, 1000, 67, 1000, 663, 223];
+
 test_sizes = zeros(10,1);
 for i=1:length(lang)
   test_sizes(i,1) = min(100, max_test_sizes(i));
@@ -22,19 +22,23 @@ classifications = zeros(11,11);
 
 model.NumNeighbors = numneighbor;
 model
+
+
 for i=1:10;
   num_tests = test_sizes(i);
   % randomly chooses num_tests test cases for current language
   % randomly permute max_test_sizes, select test_sizes filenames
   perm = randperm(max_test_sizes(i), test_sizes(i)); 
 
-  for j=1:num_tests;
+  for j=1:num_tests
     file_num = perm(j) + initial_filename(i);
     file_path = char(strcat(path,lang(i),'_test_files/',lang(i),'-',num2str(file_num), '.wav'));
+
     try
       features = extract_feature_from_wav(file_path);
-      [lang_prediction, scores] = predict(model, transpose(features));
-    
+      reduced_features = pca_features(transpose(features), pca_limit);
+      lang_prediction = predict(model, reduced_features);
+
 
       buckets = zeros(10, 1);
       for k=1:length(lang_prediction);
@@ -42,9 +46,8 @@ for i=1:10;
       end
 
       [score, final_prediction] = max(buckets);
-    
     catch err
-      final_prediction = 11; 
+      final_prediction = 11;
     end
 
     if final_prediction ~= i;
@@ -57,6 +60,7 @@ for i=1:10;
   % error per language
   errors(i) = errors(i) / num_tests;
   display(sprintf('Error for %s: %s', lang{i}, num2str(errors(i))));
+
 
 end
 

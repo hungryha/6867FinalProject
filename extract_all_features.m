@@ -2,7 +2,7 @@
 % feature vectors
 function [x] = extract_all_features(path)
 %lang = {'de';'dutch';'el';'english';'es';'french';'he';'italian';'portuguese';'russian'};
-lang = {'he'};
+lang = {'english'};
 x = [];
 
 [len, i] = size(lang);
