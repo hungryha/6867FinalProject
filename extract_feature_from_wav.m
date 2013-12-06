@@ -1,6 +1,6 @@
 % extracts feature vectors from one wav file
 % numcep melfcc, numcep deltas, numcep deltadeltas
-function [features] = extract_feature_from_wav(filepath)
+function [features] = extract_feature_from_wav(filepath, fbtype)
 
 numcep = 12;
 fbtype = 'mel';

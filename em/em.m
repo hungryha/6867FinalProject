@@ -3,11 +3,14 @@ function [param] = em(x, m, init_means)
 param = initialize(x, m, init_means);
 [param,L] = one_em_iter(x,param);
 
+count = 0;
 L0 = L-abs(L);
-while (L-L0>abs(L)*1e-6),
+while (L-L0>abs(L)*1e-6 & count < 10),
+    disp(['L: ', num2str(L), ', diff: ', num2str(abs(L)*1e-6), ', actual diff: ', num2str(L-L0)])
   %Stop iteration when the increase of loglikelihood is small enough
   L0 = L;
   [param,L] = one_em_iter(x,param);
+  count = count + 1;
 end;
 
 param.loglik = L;
@@ -21,7 +24,7 @@ param.k = m;
 
 % randomly select m points as initial means.
 for k=1:m
-    param.mu(k,:) = init_means(k, :); 
+    param.mu(k,:) = init_means(k, :);
 end
 
 % initialize variances based on the variance of the whole data set v.
@@ -30,30 +33,30 @@ end
 param.v = zeros(len,len,m);
 count = zeros(m, 1);
 
-for i=1:n
-    min_k = 1;
-    min_dist = (x(i,:) - param.mu(1,:)).^2;
-    for k=1:m
-        dist = (x(i,:) - param.mu(k,:)).^2;
-        if (dist < min_dist)
-            min_dist = dist;
-            min_k = k;
-        end
-    end
-    param.v(:,:,min_k) = param.v(:,:,min_k) + (x(i,:) - param.mu(min_k,:))'*(x(i,:) - param.mu(min_k,:));
-    count(min_k, 1) = count(min_k, 1) + 1;
-end
+% for i=1:n
+%     min_k = 1;
+%     min_dist = (x(i,:) - param.mu(1,:)).^2;
+%     for k=1:m
+%         dist = (x(i,:) - param.mu(k,:)).^2;
+%         if (dist < min_dist)
+%             min_dist = dist;
+%             min_k = k;
+%         end
+%     end
+%     param.v(:,:,min_k) = param.v(:,:,min_k) + (x(i,:) - param.mu(min_k,:))'*(x(i,:) - param.mu(min_k,:));
+%     count(min_k, 1) = count(min_k, 1) + 1;
+% end
+% 
+% for k=1:m
+%     param.v(:,:,k) = param.v(:,:,k) / count(min_k, 1);
+% end
+
 
 for k=1:m
-    param.v(:,:,k) = param.v(:,:,k) / count(min_k, 1);
+    for i=1:n
+        param.v(:,:,k) = param.v(:,:,k) + (x(i,:) - param.mu(k,:))'*(x(i,:) - param.mu(k,:));
+    end
 end
-
-
-% for k=1:m
-%     for i=1:n
-%         param.v(:,:,k) = param.v(:,:,k) + (x(i,:) - param.mu(k,:))'*(x(i,:) - param.mu(k,:));
-%     end
-% end
 
 param.p = ones(m,1)/m;
 
