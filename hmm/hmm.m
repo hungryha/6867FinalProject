@@ -1,49 +1,30 @@
-function [ model ] = hmm(X,Y,means)
-% X is two dimensions array, when X{i}(j) is the i th wave file/sentence
-%  and of the j th phoneme and
-% Y is one dimensional array, when Y(i) is the language of the i th wave
-%  file/sentence
+function [ model ] = hmm( X, Y, N )
+% X{K}(TxP)
+% Y(K) should be sorted
+% N the number of hidden states/phonemes
+%
+% output model: model.lang{L} = model from training of language l 
+%  Note it is {} not ()
 
-%K the total number of phoneme
-K = size(means,1);
-%L the number of language
-L = 10;
+%L number of language
+L = Y(size(Y,1));
+K = size(X,1);
 
-%pt the transitional probability
-pt = zeros(K,K,L);
+model.lang = cell(L,1);
 
-%pi the initial probability
-pi = zeros(K,L);
-
-%means the means for each language mfcc
-model.means = means;
-
-%count
-n = length(X);
-for i=1:n;
-    %initial
-    pi(X{i}(1),Y(i)) = pi(X{i}(1),Y(i)) + 1;
-    %transition
-    for j=2:size(X{i},1);
-        pt(X{i}(j-1),X{i}(j),Y(i)) = pt(X{i}(j-1),X{i}(j),Y(i)) + 1;
-    end
-end
-
-model.pt = normalize(pt);
-
-%normalize pi
-for k=1:L;
-    sum = 0;
-    for i=1:K;
-        sum = sum + pi(i,k);
-    end
-    if sum~=0;
-        for i=1:K;
-            pi(i,k) = pi(i,k)/sum;
+starting = 1;
+ending = 1;
+for l=1:L;
+    while Y(ending)==l;
+        ending = ending + 1;
+        if ending>size(X,1);
+            break
         end
     end
+    model.lang{l} = training(X(starting:ending-1), N);
+    starting = ending;
+    l
 end
-model.pi = pi;
 
 end
 

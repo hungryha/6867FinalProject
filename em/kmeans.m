@@ -7,12 +7,13 @@ function [result] = kmeans(k, data)
 
 [m, n] = size(data);
 k_means = zeros(m, k);
-
+'Start initialize k-means++'
 % initialize using k-means++
 num_means = 0;
 mean_index = randi([1, n]);
 k_means(:, 1) = data(:, mean_index);
 while num_means < k
+  num_means
   % construct the probabilities
   P = ones(n, 1);
   for i = 1:n
@@ -30,12 +31,14 @@ while num_means < k
   k_means(:, num_means) = data(:, index);
 end
 
+'Done initialize k-means++'
 % iterative k-means clustering
-
+'Iterative k-means clustering'
 prev_kmin = zeros(m, k);
-while prev_kmin ~= k_means
+%while prev_kmin ~= k_means
+while finishKMean(prev_kmin,k_means)>1;
+  finishKMean(prev_kmin,k_means)
   prev_kmin = k_means;
-
   % this is actually the sum of the vectors for each cluster
   new_cluster = zeros(m, k);
   count = zeros(k, 1);
